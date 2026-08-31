@@ -71,7 +71,22 @@ export const ROOMS: Record<RoomId, RoomDefinition> = {
     description: 'UX, UI and digital interfaces',
     lightColor: '#ffad5d',
     accent: '#aec9c2',
-    projects: [],
+    projects: [
+      {
+        title: 'TrendBot',
+        category: 'UX/UI design',
+        image: '/projects/office/trendbot-landing-page.png',
+        imageAlt: 'TrendBot landing page with a large Swedish headline, feature panel and orange call-to-action',
+        year: '2026',
+        slug: 'trendbot',
+        summary: 'A conversion-focused landing page that makes real-time trend intelligence feel clear, immediate and easy to act on.',
+        deliverable: 'Responsive web experience',
+        purpose: 'Present TrendBot as a practical way to discover fast-growing topics before they peak, while guiding visitors towards trying the product or choosing a plan.',
+        audience: 'Social media managers, content teams and marketers who need to decide what to publish while interest is still growing.',
+        approach: 'The experience leads with one direct promise and a strong call to action. Oversized type creates urgency, while a structured product panel explains the most useful signals in plain language. Warm neutrals, vivid orange actions and a deep green supporting card give the page a confident but approachable product identity.',
+        outcome: 'A focused responsive landing-page concept with clear product positioning, scannable benefits and an obvious path from first impression to sign-up.',
+      },
+    ],
   },
   studio: {
     id: 'studio',

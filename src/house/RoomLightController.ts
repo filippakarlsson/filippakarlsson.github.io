@@ -29,32 +29,48 @@ export class RoomLightController {
     this.buildRuntimeLights();
   }
 
-  setActiveRoom(roomId: RoomId | null): void {
+  setActiveRoom(roomId: RoomId | null): boolean {
+    if (this.activeRoom === roomId) return false;
     this.activeRoom = roomId;
+    return true;
   }
 
-  update(deltaSeconds: number): void {
+  update(deltaSeconds: number): boolean {
+    let isAnimating = false;
+
     for (const binding of this.runtimeLights) {
       const isActive = binding.roomId === this.activeRoom;
       const target = isActive ? binding.targetIntensity : 0;
       if (isActive) binding.light.visible = true;
-      binding.light.intensity = MathUtils.damp(binding.light.intensity, target, 10, deltaSeconds);
-      if (!isActive && binding.light.intensity < 0.001) {
-        binding.light.intensity = 0;
+      const next = MathUtils.damp(binding.light.intensity, target, 10, deltaSeconds);
+      if (Math.abs(next - target) > 0.02) {
+        binding.light.intensity = next;
+        isAnimating = true;
+      } else {
+        binding.light.intensity = target;
+      }
+      if (!isActive && binding.light.intensity === 0) {
         binding.light.visible = false;
       }
     }
 
     for (const binding of this.emissiveBindings) {
       const target = binding.roomId === this.activeRoom ? binding.targetIntensity : 0;
-      binding.material.emissiveIntensity = MathUtils.damp(
+      const next = MathUtils.damp(
         binding.material.emissiveIntensity,
         target,
         11,
         deltaSeconds,
       );
-      if (binding.material.emissiveIntensity < 0.001) binding.material.emissiveIntensity = 0;
+      if (Math.abs(next - target) > 0.002) {
+        binding.material.emissiveIntensity = next;
+        isAnimating = true;
+      } else {
+        binding.material.emissiveIntensity = target;
+      }
     }
+
+    return isAnimating;
   }
 
   getIntensities(): Record<RoomId, number> {

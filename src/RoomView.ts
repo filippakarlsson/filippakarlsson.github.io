@@ -103,6 +103,11 @@ export class RoomView {
     count.textContent = `${room.projects.length} ${room.projects.length === 1 ? 'project' : 'projects'}`;
     document.title = `${room.label} Projects — Filippa Karlsson`;
 
+    const backLabel = this.caseStudy.querySelector<HTMLElement>('[data-back-to-projects-label]');
+    const nextLabel = this.caseStudy.querySelector<HTMLElement>('[data-next-project-label]');
+    if (backLabel) backLabel.textContent = `${room.label} projects`;
+    if (nextLabel) nextLabel.textContent = `Next ${room.label} project`;
+
     this.projectGrid.replaceChildren(...room.projects.map((project) => this.createProjectCard(project)));
     this.projectGrid.hidden = room.projects.length === 0;
     empty.hidden = room.projects.length > 0;
@@ -225,6 +230,7 @@ export class RoomView {
     const projects = this.currentRoom ? ROOMS[this.currentRoom].projects : [];
     const index = projects.findIndex((candidate) => candidate.slug === project.slug);
     const next = projects[(index + 1) % projects.length];
+    this.nextProjectButton.hidden = projects.length < 2;
     const nextTitle = this.caseStudy.querySelector<HTMLElement>('[data-next-project-title]');
     if (nextTitle) nextTitle.textContent = next?.title ?? '';
 

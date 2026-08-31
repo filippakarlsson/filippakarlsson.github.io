@@ -21,6 +21,8 @@ export class RoomInteractionController {
   private readonly hitboxes = new Map<RoomId, Mesh>();
   private hoveredRoom: RoomId | null = null;
   private enabled = true;
+  private pointerFrame: number | null = null;
+  private pendingPointer: { x: number; y: number } | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -37,8 +39,8 @@ export class RoomInteractionController {
       this.hitboxes.set(roomId, object);
     });
 
-    this.canvas.addEventListener('pointermove', this.onPointerMove);
-    this.canvas.addEventListener('pointerleave', this.onPointerLeave);
+    this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: true });
+    this.canvas.addEventListener('pointerleave', this.onPointerLeave, { passive: true });
     this.canvas.addEventListener('click', this.onClick);
   }
 
@@ -58,7 +60,10 @@ export class RoomInteractionController {
     if (this.enabled === enabled) return;
     this.enabled = enabled;
     this.canvas.classList.toggle('is-interaction-locked', !enabled);
-    if (!enabled) this.setHoveredRoom(null);
+    if (!enabled) {
+      this.cancelPendingPointer();
+      this.setHoveredRoom(null);
+    }
   }
 
   getRoomViewBounds(roomId: RoomId): RoomViewBounds | null {
@@ -83,11 +88,20 @@ export class RoomInteractionController {
 
   private readonly onPointerMove = (event: PointerEvent): void => {
     if (!this.enabled) return;
-    const roomId = this.pickRoom(event.clientX, event.clientY);
-    this.setHoveredRoom(roomId);
+    this.pendingPointer = { x: event.clientX, y: event.clientY };
+    if (this.pointerFrame !== null) return;
+
+    this.pointerFrame = requestAnimationFrame(() => {
+      this.pointerFrame = null;
+      const pointer = this.pendingPointer;
+      this.pendingPointer = null;
+      if (!pointer || !this.enabled) return;
+      this.setHoveredRoom(this.pickRoom(pointer.x, pointer.y));
+    });
   };
 
   private readonly onPointerLeave = (): void => {
+    this.cancelPendingPointer();
     this.setHoveredRoom(null);
   };
 
@@ -114,5 +128,11 @@ export class RoomInteractionController {
     this.hoveredRoom = roomId;
     this.canvas.classList.toggle('is-room-hovered', roomId !== null);
     this.callbacks.onHover(roomId);
+  }
+
+  private cancelPendingPointer(): void {
+    if (this.pointerFrame !== null) cancelAnimationFrame(this.pointerFrame);
+    this.pointerFrame = null;
+    this.pendingPointer = null;
   }
 }

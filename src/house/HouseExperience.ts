@@ -47,6 +47,7 @@ export class HouseExperience {
   private lastFrameTime = performance.now();
   private lastDebugUpdate = 0;
   private modelMeshCount = 0;
+  private renderedFrameCount = 0;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -78,7 +79,7 @@ export class HouseExperience {
     this.lights = new RoomLightController(model);
     this.interaction = new RoomInteractionController(this.canvas, this.camera, model, {
       onHover: (roomId) => {
-        this.lights?.setActiveRoom(roomId);
+        if (this.lights?.setActiveRoom(roomId)) this.resumeRendering();
         this.onHover(roomId);
       },
       onSelect: (roomId) => {
@@ -89,7 +90,7 @@ export class HouseExperience {
     this.cameraTransitions = new CameraTransitionController(
       this.camera,
       (roomId) => this.interaction?.getRoomViewBounds(roomId) ?? null,
-      this.renderOnce,
+      this.renderFrame,
     );
 
     if (this.interaction.getHitboxCount() !== ROOM_IDS.length) {
@@ -98,18 +99,20 @@ export class HouseExperience {
 
     this.resize();
     window.addEventListener('resize', this.resize);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
     this.canvas.dataset.ready = 'true';
     this.canvas.dataset.hitboxCount = String(this.interaction.getHitboxCount());
     this.updateRoomPositions();
-    this.resumeRendering();
+    this.renderOnce();
   }
 
   async focusRoom(roomId: RoomId): Promise<void> {
     if (!this.cameraTransitions || !this.interaction) return;
     this.interaction.setEnabled(false);
     this.selectedRoom = roomId;
-    this.lights?.setActiveRoom(roomId);
+    if (this.lights?.setActiveRoom(roomId)) this.resumeRendering();
     await this.cameraTransitions.focusRoom(roomId);
+    this.renderOnce();
   }
 
   pauseRendering(): void {
@@ -130,7 +133,7 @@ export class HouseExperience {
   prepareRoomReturn(roomId: RoomId): void {
     this.selectedRoom = roomId;
     this.interaction?.setEnabled(false);
-    this.lights?.setActiveRoom(roomId);
+    if (this.lights?.setActiveRoom(roomId)) this.resumeRendering();
     this.cameraTransitions?.restoreFocusedRoom(roomId);
     this.resumeRendering();
     this.renderOnce();
@@ -140,10 +143,11 @@ export class HouseExperience {
     if (!this.cameraTransitions) return;
     await this.cameraTransitions.returnToOverview();
     this.selectedRoom = null;
-    this.lights?.setActiveRoom(null);
+    if (this.lights?.setActiveRoom(null)) this.resumeRendering();
     this.interaction?.setEnabled(true);
     this.onHover(null);
     this.updateRoomPositions();
+    this.renderOnce();
   }
 
   getState(): HouseState {
@@ -186,25 +190,47 @@ export class HouseExperience {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(width, height, false);
     this.updateRoomPositions();
+    this.renderOnce();
+  };
+
+  private readonly onVisibilityChange = (): void => {
+    if (document.hidden) {
+      this.pauseRendering();
+      return;
+    }
+    this.resumeRendering();
   };
 
   private readonly animate = (now: number): void => {
     if (!this.rendering) return;
     const delta = Math.min((now - this.lastFrameTime) / 1000, 0.05);
     this.lastFrameTime = now;
-    this.lights?.update(delta);
-    if (this.camera) this.renderer.render(this.scene, this.camera);
+    const lightsAreAnimating = this.lights?.update(delta) ?? false;
+    this.renderFrame();
     if (now - this.lastDebugUpdate > 100) {
       this.writeDebugState();
       this.lastDebugUpdate = now;
     }
-    this.animationFrame = requestAnimationFrame(this.animate);
+    if (lightsAreAnimating) {
+      this.animationFrame = requestAnimationFrame(this.animate);
+      return;
+    }
+
+    this.rendering = false;
+    this.animationFrame = null;
+    this.writeDebugState();
   };
 
   private readonly renderOnce = (): void => {
-    if (this.camera) this.renderer.render(this.scene, this.camera);
+    this.renderFrame();
     this.updateRoomPositions();
     this.writeDebugState();
+  };
+
+  private readonly renderFrame = (): void => {
+    if (!this.camera) return;
+    this.renderer.render(this.scene, this.camera);
+    this.renderedFrameCount += 1;
   };
 
   private writeDebugState(): void {
@@ -221,6 +247,7 @@ export class HouseExperience {
     this.canvas.dataset.mergedGroups = String(state.mergedGroupCount);
     this.canvas.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.canvas.dataset.triangles = String(this.renderer.info.render.triangles);
+    this.canvas.dataset.renderedFrames = String(this.renderedFrameCount);
   }
 
   private updateRoomPositions(): void {
