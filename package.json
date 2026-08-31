@@ -1,0 +1,20 @@
+{
+  "name": "portfolio-house-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "model:export": "'/Applications/Blender.app/Contents/MacOS/Blender' --background --python scripts/export_house.py -- --source '/Users/filippakarlsson/Desktop/filippa_house_reference_rebuilt.blend' --output public/models/house.glb"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
+  }
+}

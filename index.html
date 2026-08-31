@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="An architectural portfolio explored through an interactive house." />
+    <title>Portfolio House — Interaction Prototype</title>
+    <script>
+      if (window.location.protocol === 'file:') {
+        window.location.replace('http://127.0.0.1:5173/');
+      }
+    </script>
+  </head>
+  <body>
+    <main id="app">
+      <div class="atmosphere" aria-hidden="true">
+        <span class="atmosphere__garden atmosphere__garden--left"></span>
+        <span class="atmosphere__garden atmosphere__garden--right"></span>
+        <span class="atmosphere__garden atmosphere__garden--ground"></span>
+        <span class="atmosphere__detail atmosphere__detail--left"></span>
+        <span class="atmosphere__detail atmosphere__detail--right"></span>
+        <span class="atmosphere__glints"></span>
+      </div>
+
+      <header class="site-mark" aria-label="Portfolio title">
+        <span>Filippa Karlsson</span>
+        <span>Portfolio house</span>
+      </header>
+
+      <button class="menu-trigger" id="menu-trigger" type="button" aria-controls="info-overlay" aria-expanded="false">
+        <span>Info</span>
+        <span class="menu-trigger__icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+
+      <section class="house-stage" aria-label="Interactive portfolio house">
+        <canvas id="house-canvas" aria-label="Move over a room to illuminate it, then click to select it."></canvas>
+
+        <div class="loading-state" id="loading-state" role="status">
+          <span class="loading-state__line"></span>
+          <span>Opening the house…</span>
+        </div>
+
+        <div class="error-state" id="error-state" role="alert" hidden>
+          <p>The house could not be opened.</p>
+          <p id="error-detail"></p>
+        </div>
+      </section>
+
+      <div class="interaction-status" aria-live="polite">
+        <span class="interaction-status__eyebrow" id="status-eyebrow">Explore the house</span>
+        <span class="interaction-status__room" id="status-room">Move across a room</span>
+      </div>
+
+      <div class="info-overlay" id="info-overlay" aria-hidden="true">
+        <button class="info-overlay__backdrop" type="button" data-info-close aria-label="Close information"></button>
+
+        <section class="info-panel" role="dialog" aria-modal="true" aria-labelledby="info-panel-title">
+          <header class="info-panel__header">
+            <span id="info-panel-title">Information</span>
+            <button class="info-close" type="button" data-info-close>
+              <span>Close</span>
+              <span class="info-close__icon" aria-hidden="true"></span>
+            </button>
+          </header>
+
+          <div class="info-panel__layout">
+            <nav class="info-nav" aria-label="Information pages">
+              <button type="button" data-info-page="about" aria-current="page">
+                <span>01</span>
+                <span>About</span>
+              </button>
+              <button type="button" data-info-page="contact">
+                <span>02</span>
+                <span>Contact</span>
+              </button>
+            </nav>
+
+            <div class="info-content">
+              <article data-info-content="about">
+                <p class="info-content__index">01 / About</p>
+                <h1>The house is the portfolio.</h1>
+                <div class="info-content__copy">
+                  <p>This site is built around an interactive 3D house instead of a conventional portfolio layout. Each floor represents a different category of work.</p>
+                  <p>Move across a room to switch on its lights, then select it to explore what lives inside. The architecture is both the interface and the navigation.</p>
+                </div>
+              </article>
+
+              <article data-info-content="contact" hidden>
+                <p class="info-content__index">02 / Contact</p>
+                <h1>Let’s make something good together.</h1>
+                <div class="info-content__copy">
+                  <p>I’m available for collaborations, commissions and conversations about new projects.</p>
+                  <div class="contact-links" aria-label="Contact links">
+                    <a href="mailto:filippaimk@gmail.com">
+                      <span>Email</span>
+                      <strong>filippaimk@gmail.com</strong>
+                    </a>
+                    <a href="https://www.linkedin.com/in/filippa-k-540775334" target="_blank" rel="noreferrer">
+                      <span>Social</span>
+                      <strong>LinkedIn</strong>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="room-view" id="room-view" aria-hidden="true" hidden>
+        <header class="room-view__header">
+          <a class="room-view__mark" href="#top" aria-label="Filippa Karlsson portfolio home">
+            <span>Filippa Karlsson</span>
+            <span>Portfolio house</span>
+          </a>
+          <button class="back-to-house" type="button" data-back-to-house>
+            <span aria-hidden="true">←</span>
+            <span>Back to house</span>
+          </button>
+        </header>
+
+        <main class="room-page" id="top">
+          <section class="room-intro" aria-labelledby="room-title">
+            <div class="room-intro__label">
+              <span class="room-intro__dot" aria-hidden="true"></span>
+              <span data-room-category>Room</span>
+            </div>
+            <div class="room-intro__copy">
+              <h1 id="room-title" data-room-title>Room</h1>
+              <p data-room-description></p>
+            </div>
+          </section>
+
+          <section class="projects" aria-labelledby="projects-title">
+            <header class="projects__header">
+              <h2 id="projects-title">Projects</h2>
+              <span data-project-count>0 projects</span>
+            </header>
+            <div class="project-grid" data-project-grid hidden></div>
+            <div class="projects-empty" data-project-empty>
+              <span class="projects-empty__line" aria-hidden="true"></span>
+              <p>Oops, nothing to see here yet...</p>
+              <span>This room is still being filled.</span>
+            </div>
+          </section>
+        </main>
+
+        <article class="case-study" data-case-study aria-labelledby="case-study-title" hidden>
+          <button class="case-study__back" type="button" data-back-to-projects>
+            <span aria-hidden="true">←</span>
+            <span>Studio projects</span>
+          </button>
+
+          <header class="case-study__hero">
+            <p class="case-study__eyebrow" data-case-study-eyebrow></p>
+            <h1 id="case-study-title" data-case-study-title></h1>
+            <p class="case-study__summary" data-case-study-summary></p>
+          </header>
+
+          <figure class="case-study__visual" data-case-study-visual>
+            <img data-case-study-image alt="" />
+          </figure>
+
+          <div class="case-study__overview">
+            <dl class="case-study__facts">
+              <div>
+                <dt>Category</dt>
+                <dd data-case-study-category></dd>
+              </div>
+              <div>
+                <dt>Deliverable</dt>
+                <dd data-case-study-deliverable></dd>
+              </div>
+              <div>
+                <dt>Year</dt>
+                <dd data-case-study-year></dd>
+              </div>
+            </dl>
+
+            <div class="case-study__sections">
+              <section>
+                <span>01</span>
+                <div>
+                  <h2>Purpose</h2>
+                  <p data-case-study-purpose></p>
+                </div>
+              </section>
+              <section>
+                <span>02</span>
+                <div>
+                  <h2>Audience</h2>
+                  <p data-case-study-audience></p>
+                </div>
+              </section>
+              <section>
+                <span>03</span>
+                <div>
+                  <h2>Approach</h2>
+                  <p data-case-study-approach></p>
+                </div>
+              </section>
+              <section>
+                <span>04</span>
+                <div>
+                  <h2>Outcome</h2>
+                  <p data-case-study-outcome></p>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <a class="case-study__document" data-case-study-document target="_blank" rel="noreferrer" hidden>
+            <span>View original catalogue</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+
+          <button class="case-study__next" type="button" data-next-project>
+            <span>Next Studio project</span>
+            <strong data-next-project-title></strong>
+            <span aria-hidden="true">→</span>
+          </button>
+        </article>
+      </section>
+
+      <div class="white-transition" id="white-transition" aria-hidden="true" hidden></div>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
