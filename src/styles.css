@@ -2,8 +2,14 @@
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #262823;
   background: #f5f8f6;
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+:root[data-theme="night"] {
+  background: #08101f;
+  color-scheme: dark;
 }
 
 * {
@@ -26,6 +32,11 @@ body,
 
 body {
   background: #f5f8f6;
+  transition: background-color 560ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme="night"] body {
+  background: #08101f;
 }
 
 #app {
@@ -191,6 +202,23 @@ body {
   opacity: 0.58;
 }
 
+.atmosphere__night {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: block;
+  background:
+    linear-gradient(180deg, rgba(3, 9, 20, 0.08), rgba(5, 13, 27, 0.2)),
+    url('/night-sky.png') center / cover no-repeat;
+  opacity: 0;
+  transform: scale(1.015);
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme="night"] .atmosphere__night {
+  opacity: 1;
+}
+
 .site-mark {
   position: absolute;
   z-index: 2;
@@ -211,6 +239,76 @@ body {
 .site-mark span:last-child {
   color: #7a7c72;
   font-weight: 450;
+}
+
+.theme-toggle {
+  position: absolute;
+  z-index: 5;
+  top: clamp(1.25rem, 3vw, 2.5rem);
+  right: calc(clamp(1.25rem, 3vw, 2.75rem) + 5.65rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  color: #4d5048;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.67rem;
+  font-weight: 560;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 300ms ease, opacity 180ms ease;
+}
+
+.theme-toggle__icon {
+  width: 1rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 0.75;
+  text-align: center;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: #171914;
+}
+
+.theme-toggle:focus-visible,
+.menu-trigger:focus-visible {
+  border-radius: 0.15rem;
+  outline: 1px solid currentColor;
+  outline-offset: 0.45rem;
+}
+
+:root[data-theme="night"] .site-mark,
+:root[data-theme="night"] .menu-trigger,
+:root[data-theme="night"] .theme-toggle {
+  color: #f0eee8;
+  text-shadow: 0 1px 1.5rem rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="night"] .site-mark span:last-child,
+:root[data-theme="night"] .interaction-status__eyebrow {
+  color: #aeb9cb;
+}
+
+:root[data-theme="night"] .interaction-status__room {
+  color: #f2efe8;
+  text-shadow: 0 1px 1.5rem rgba(0, 0, 0, 0.48);
+}
+
+:root[data-theme="night"] .loading-state,
+:root[data-theme="night"] .error-state {
+  color: #c1cad8;
+}
+
+:root[data-theme="night"] .loading-state__line {
+  background: rgba(221, 228, 238, 0.24);
+}
+
+:root[data-theme="night"] .loading-state__line::after {
+  background: #dbe3ee;
 }
 
 button {
@@ -238,6 +336,11 @@ button {
 }
 
 .info-is-open .menu-trigger {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.info-is-open .theme-toggle {
   opacity: 0;
   pointer-events: none;
 }
@@ -294,6 +397,7 @@ button {
 
 .portfolio-is-transitioning .site-mark,
 .portfolio-is-transitioning .menu-trigger,
+.portfolio-is-transitioning .theme-toggle,
 .portfolio-is-transitioning .interaction-status {
   opacity: 0;
   pointer-events: none;
@@ -301,6 +405,7 @@ button {
 
 .project-is-open .site-mark,
 .project-is-open .menu-trigger,
+.project-is-open .theme-toggle,
 .project-is-open .interaction-status,
 .project-is-open .info-overlay {
   display: none;
@@ -629,6 +734,13 @@ button {
 @keyframes load {
   from { transform: translateX(-100%); }
   to { transform: translateX(200%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .atmosphere__night {
+    transition-duration: 0.01ms;
+  }
 }
 
 .white-transition {

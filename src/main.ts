@@ -23,6 +23,9 @@ const interactionStatus = document.querySelector<HTMLElement>('.interaction-stat
 const statusEyebrow = document.querySelector<HTMLElement>('#status-eyebrow');
 const statusRoom = document.querySelector<HTMLElement>('#status-room');
 const menuTrigger = document.querySelector<HTMLButtonElement>('#menu-trigger');
+const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
+const themeLabel = document.querySelector<HTMLElement>('[data-theme-label]');
+const themeIcon = document.querySelector<HTMLElement>('[data-theme-icon]');
 const infoOverlay = document.querySelector<HTMLElement>('#info-overlay');
 const infoCloseButtons = document.querySelectorAll<HTMLButtonElement>('[data-info-close]');
 const infoPageButtons = document.querySelectorAll<HTMLButtonElement>('[data-info-page]');
@@ -31,13 +34,37 @@ const roomViewElement = document.querySelector<HTMLElement>('#room-view');
 const transitionOverlay = document.querySelector<HTMLElement>('#white-transition');
 const houseStage = document.querySelector<HTMLElement>('.house-stage');
 
-if (!canvas || !loadingState || !errorState || !errorDetail || !interactionStatus || !statusEyebrow || !statusRoom || !menuTrigger || !infoOverlay || !roomViewElement || !transitionOverlay || !houseStage) {
+if (!canvas || !loadingState || !errorState || !errorDetail || !interactionStatus || !statusEyebrow || !statusRoom || !menuTrigger || !themeToggle || !themeLabel || !themeIcon || !infoOverlay || !roomViewElement || !transitionOverlay || !houseStage) {
   throw new Error('The prototype shell is missing required elements.');
 }
 
 let experience: HouseExperience;
 let pageTransition: PageTransitionController;
 type InfoPage = 'about' | 'contact';
+type Theme = 'day' | 'night';
+
+const setTheme = (theme: Theme, persist = true): void => {
+  const isNight = theme === 'night';
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute('aria-pressed', String(isNight));
+  themeToggle.setAttribute('aria-label', `Switch to ${isNight ? 'day' : 'night'} mode`);
+  themeToggle.title = `Switch to ${isNight ? 'day' : 'night'} mode`;
+  themeLabel.textContent = isNight ? 'Day' : 'Night';
+  themeIcon.textContent = isNight ? '☀' : '☾';
+
+  if (persist) {
+    try {
+      localStorage.setItem('portfolio-theme', theme);
+    } catch {
+      // The theme still works when storage is unavailable.
+    }
+  }
+};
+
+setTheme(document.documentElement.dataset.theme === 'night' ? 'night' : 'day', false);
+themeToggle.addEventListener('click', () => {
+  setTheme(document.documentElement.dataset.theme === 'night' ? 'day' : 'night');
+});
 
 const showInfoPage = (page: InfoPage): void => {
   for (const button of infoPageButtons) {

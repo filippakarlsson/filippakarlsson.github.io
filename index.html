@@ -6,6 +6,17 @@
     <meta name="description" content="An architectural portfolio explored through an interactive house." />
     <title>Portfolio House — Interaction Prototype</title>
     <script>
+      try {
+        const savedTheme = localStorage.getItem('portfolio-theme');
+        const prefersNight = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = savedTheme === 'night' || savedTheme === 'day'
+          ? savedTheme
+          : prefersNight ? 'night' : 'day';
+      } catch {
+        document.documentElement.dataset.theme = 'day';
+      }
+    </script>
+    <script>
       if (window.location.protocol === 'file:') {
         window.location.replace('http://127.0.0.1:5173/');
       }
@@ -20,12 +31,18 @@
         <span class="atmosphere__detail atmosphere__detail--left"></span>
         <span class="atmosphere__detail atmosphere__detail--right"></span>
         <span class="atmosphere__glints"></span>
+        <span class="atmosphere__night"></span>
       </div>
 
       <header class="site-mark" aria-label="Portfolio title">
         <span>Filippa Karlsson</span>
         <span>Portfolio house</span>
       </header>
+
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
+        <span class="theme-toggle__icon" data-theme-icon aria-hidden="true">☾</span>
+        <span data-theme-label>Night</span>
+      </button>
 
       <button class="menu-trigger" id="menu-trigger" type="button" aria-controls="info-overlay" aria-expanded="false">
         <span>Info</span>
