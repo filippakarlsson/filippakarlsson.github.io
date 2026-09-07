@@ -1337,6 +1337,11 @@ button {
     text-align: center;
   }
 
+  .interaction-status.is-room-aligned {
+    top: clamp(5.25rem, 13vh, 7rem);
+    transform: none;
+  }
+
   .menu-trigger {
     font-size: 0.64rem;
   }
