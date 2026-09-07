@@ -186,6 +186,7 @@ export class HouseExperience {
     const widthFit = horizontalFit / aspect;
     const halfHeight = Math.max(portraitFit, widthFit);
     const halfWidth = halfHeight * aspect;
+    const mobileVerticalOffset = 0.95 * mobileCropStrength;
 
     if (this.selectedRoom === null) {
       const roomsCenter = this.interaction?.getRoomsCenter();
@@ -197,8 +198,8 @@ export class HouseExperience {
 
     this.camera.left = this.overviewFrustumCenterX - halfWidth;
     this.camera.right = this.overviewFrustumCenterX + halfWidth;
-    this.camera.top = halfHeight;
-    this.camera.bottom = -halfHeight;
+    this.camera.top = halfHeight + mobileVerticalOffset;
+    this.camera.bottom = -halfHeight + mobileVerticalOffset;
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(width, height, false);
