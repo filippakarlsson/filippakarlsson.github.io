@@ -48,6 +48,7 @@ export class HouseExperience {
   private lastDebugUpdate = 0;
   private modelMeshCount = 0;
   private renderedFrameCount = 0;
+  private overviewFrustumCenterX = 0;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -178,12 +179,24 @@ export class HouseExperience {
     const width = Math.max(1, this.canvas.clientWidth);
     const height = Math.max(1, this.canvas.clientHeight);
     const aspect = width / height;
+    const centerStrength = Math.min(1, Math.max(0, (1120 - width) / 300));
+    const mobileCropStrength = Math.min(1, Math.max(0, (680 - width) / 120));
     const portraitFit = 7.3;
-    const widthFit = 5.4 / aspect;
+    const horizontalFit = 5.4 - 0.7 * mobileCropStrength;
+    const widthFit = horizontalFit / aspect;
     const halfHeight = Math.max(portraitFit, widthFit);
+    const halfWidth = halfHeight * aspect;
 
-    this.camera.left = -halfHeight * aspect;
-    this.camera.right = halfHeight * aspect;
+    if (this.selectedRoom === null) {
+      const roomsCenter = this.interaction?.getRoomsCenter();
+      if (roomsCenter) {
+        this.camera.updateMatrixWorld(true);
+        this.overviewFrustumCenterX = this.camera.worldToLocal(roomsCenter.clone()).x * centerStrength;
+      }
+    }
+
+    this.camera.left = this.overviewFrustumCenterX - halfWidth;
+    this.camera.right = this.overviewFrustumCenterX + halfWidth;
     this.camera.top = halfHeight;
     this.camera.bottom = -halfHeight;
     this.camera.updateProjectionMatrix();

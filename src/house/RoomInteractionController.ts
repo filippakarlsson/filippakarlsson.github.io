@@ -73,6 +73,16 @@ export class RoomInteractionController {
     return { bounds, center: bounds.getCenter(new Vector3()) };
   }
 
+  getRoomsCenter(): Vector3 | null {
+    if (this.hitboxes.size === 0) return null;
+
+    const center = new Vector3();
+    for (const hitbox of this.hitboxes.values()) {
+      center.add(hitbox.getWorldPosition(new Vector3()));
+    }
+    return center.divideScalar(this.hitboxes.size);
+  }
+
   getRoomScreenPosition(roomId: RoomId): { x: number; y: number } | null {
     const hitbox = this.hitboxes.get(roomId);
     if (!hitbox) return null;
