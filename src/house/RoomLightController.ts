@@ -20,12 +20,22 @@ interface EmissiveBinding {
   targetIntensity: number;
 }
 
+const ROOM_LIGHT_LAYERS: Record<RoomId, number> = {
+  basement: 1,
+  welcome: 2,
+  playroom: 3,
+  office: 4,
+  studio: 5,
+  rooftop: 6,
+};
+
 export class RoomLightController {
   private readonly runtimeLights: RuntimeLight[] = [];
   private readonly emissiveBindings: EmissiveBinding[] = [];
   private activeRoom: RoomId | null = null;
 
   constructor(private readonly model: Object3D) {
+    this.assignRoomLayers();
     this.buildRuntimeLights();
   }
 
@@ -94,11 +104,12 @@ export class RoomLightController {
 
       const isMain = anchor.name === `${roomId.toUpperCase()}_HOVER_LIGHT`;
       const sourceEnergy = Number(anchor.userData.hover_target_energy ?? (isMain ? 520 : 90));
-      const targetIntensity = sourceEnergy * 0.12;
+      const targetIntensity = sourceEnergy * 0.105;
       const lightColor = String(anchor.userData.lightColor ?? ROOMS[roomId].lightColor);
       const light = new PointLight(lightColor, 0, isMain ? 4.6 : 2.8, 2);
       light.name = `${anchor.name}_RUNTIME`;
       light.visible = false;
+      light.layers.set(ROOM_LIGHT_LAYERS[roomId]);
       light.position.copy(anchor.getWorldPosition(light.position));
       this.model.parent?.add(light);
       this.runtimeLights.push({ light, roomId, targetIntensity });
@@ -136,8 +147,38 @@ export class RoomLightController {
       if (!(material instanceof MeshStandardMaterial)) continue;
       material.emissive = new Color(lightColor);
       material.emissiveIntensity = 0;
-      this.emissiveBindings.push({ material, roomId, targetIntensity });
+      this.emissiveBindings.push({ material, roomId, targetIntensity: targetIntensity * 0.88 });
     }
+  }
+
+  private assignRoomLayers(): void {
+    this.model.traverse((object) => {
+      const roomId = this.findRoomId(object);
+      if (roomId) object.layers.enable(ROOM_LIGHT_LAYERS[roomId]);
+    });
+  }
+
+  private findRoomId(object: Object3D): RoomId | null {
+    let current: Object3D | null = object;
+
+    while (current) {
+      const candidates = [
+        current.userData.roomId,
+        current.userData.portfolio_floor,
+        current.userData.floor,
+      ];
+
+      for (const candidate of candidates) {
+        if (typeof candidate !== 'string') continue;
+        const normalized = candidate.toLowerCase();
+        if (this.isRoom(normalized)) return normalized;
+      }
+
+      if (current === this.model) break;
+      current = current.parent;
+    }
+
+    return null;
   }
 
   private isRoom(value: unknown): value is RoomId {
