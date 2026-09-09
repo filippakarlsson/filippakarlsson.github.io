@@ -23,6 +23,11 @@ export interface ProjectDefinition {
   approach: string;
   outcome: string;
   imageFit?: 'cover' | 'contain';
+  thumbnailFit?: 'cover' | 'contain';
+  thumbnailPosition?: string;
+  detailFit?: 'cover' | 'contain';
+  detailPosition?: string;
+  detailAspect?: string;
   document?: string;
 }
 
@@ -88,17 +93,20 @@ export const ROOMS: Record<RoomId, RoomDefinition> = {
       },
       {
         title: 'TripFlow',
-        category: 'UX/UI design',
+        category: 'Landing page design',
         image: '/projects/office/tripflow-landing-page.png',
-        imageAlt: 'TripFlow travel-planning landing page with hot-air balloons, a photographer and prominent sign-up actions',
+        imageAlt: 'TripFlow landing page with hot-air balloons, a photographer and prominent sign-up actions',
         year: '2026',
         slug: 'tripflow',
-        summary: 'A cinematic travel-planning landing page that turns a complex planning task into an inviting and focused first step.',
-        deliverable: 'Responsive landing page',
-        purpose: 'Introduce TripFlow as one organised place for planning memorable trips, while giving new and returning users clear paths into the product.',
-        audience: 'Independent travellers who want inspiration and a simpler way to organise the practical parts of a journey.',
-        approach: 'The interface opens with a full-screen destination photograph and a strong two-line promise. A cool blue call to action establishes the primary route, while repeated log-in access supports returning users without competing with sign-up. High-contrast typography and generous spacing keep the message readable over the image.',
-        outcome: 'A focused landing-page concept with a clear hierarchy, recognisable travel atmosphere and an immediate path from inspiration to account creation.',
+        summary: 'A travel-themed landing page built around a strong hero image, clear headline and focused calls to action.',
+        deliverable: 'Landing page',
+        purpose: 'Create a clear and inviting first page for TripFlow that quickly communicates its travel theme and encourages visitors to get started or log in.',
+        audience: 'Travellers discovering TripFlow for the first time, alongside returning visitors looking for the log-in action.',
+        approach: 'A full-screen photograph creates the atmosphere, while the large two-line headline establishes the message. The blue primary button leads the hierarchy and the secondary log-in action stays visible without competing with it.',
+        outcome: 'A focused landing-page design with readable typography, clear actions and a distinctive travel mood.',
+        thumbnailPosition: 'center top',
+        detailPosition: 'center top',
+        detailAspect: '1162 / 1122',
       },
     ],
   },

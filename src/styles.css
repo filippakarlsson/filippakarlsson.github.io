@@ -1149,7 +1149,7 @@ button {
 
 .case-study__visual {
   display: grid;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: var(--case-study-aspect, 16 / 10);
   margin: 0;
   overflow: hidden;
   place-items: center;

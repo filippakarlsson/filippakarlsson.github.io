@@ -115,10 +115,11 @@ export class RoomView {
 
   private createProjectCard(project: ProjectDefinition): HTMLElement {
     const article = document.createElement('article');
+    const thumbnailFit = project.thumbnailFit ?? project.imageFit ?? 'cover';
     article.className = 'project-card';
     article.innerHTML = `
       <a class="project-card__link" href="#project-${encodeURIComponent(project.slug)}" data-project-slug="${this.escape(project.slug)}">
-        <span class="project-card__media${project.imageFit === 'contain' ? ' is-contained' : ''}">
+        <span class="project-card__media${thumbnailFit === 'contain' ? ' is-contained' : ''}">
           <img src="${this.escape(project.image)}" alt="${this.escape(project.imageAlt)}" loading="lazy" />
           <span class="project-card__overlay">
             <span>${this.escape(project.category)}</span>
@@ -133,6 +134,8 @@ export class RoomView {
         </span>
       </a>
     `;
+    const image = article.querySelector<HTMLImageElement>('.project-card__media img');
+    if (image) image.style.objectPosition = project.thumbnailPosition ?? 'center';
     return article;
   }
 
@@ -221,7 +224,9 @@ export class RoomView {
 
     image.src = project.image;
     image.alt = project.imageAlt;
-    visual.classList.toggle('is-contained', project.imageFit === 'contain');
+    image.style.objectPosition = project.detailPosition ?? 'center';
+    visual.style.setProperty('--case-study-aspect', project.detailAspect ?? '16 / 10');
+    visual.classList.toggle('is-contained', (project.detailFit ?? project.imageFit) === 'contain');
 
     documentLink.hidden = !project.document;
     if (project.document) documentLink.href = project.document;
