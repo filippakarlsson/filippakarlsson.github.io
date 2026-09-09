@@ -308,9 +308,9 @@ export class HouseExperience {
         const hsl = { h: 0, s: 0, l: 0 };
         color.getHSL(hsl);
 
-        // Keep the established pastel palette while giving it enough separation
-        // to survive the bright website background and display tone mapping.
-        const saturation = hsl.s > 0.025 ? Math.min(1, hsl.s * 1.16 + 0.018) : hsl.s;
+        // Mute the established pastel palette; contrast comes from lighting and
+        // shadows instead of highly saturated room colors.
+        const saturation = hsl.s > 0.025 ? Math.max(0, hsl.s * 0.8) : hsl.s;
         const lightness = hsl.l > 0.86
           ? Math.max(0, hsl.l - 0.035)
           : Math.max(0, hsl.l * 0.93);

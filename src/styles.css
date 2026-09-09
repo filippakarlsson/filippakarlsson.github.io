@@ -383,12 +383,12 @@ button {
 #house-canvas {
   display: block;
   cursor: default;
-  filter: contrast(1.075) saturate(1.08);
+  filter: contrast(1.075) saturate(0.9);
   outline: none;
 }
 
 :root[data-theme="night"] #house-canvas {
-  filter: contrast(1.08) saturate(1.06) brightness(0.96);
+  filter: contrast(1.08) saturate(0.88) brightness(0.96);
 }
 
 #house-canvas.is-room-hovered {
