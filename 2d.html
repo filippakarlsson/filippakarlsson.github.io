@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Filippa Karlsson's interactive illustrated portfolio house." />
+    <title>2.5D Portfolio House — Filippa Karlsson</title>
+  </head>
+  <body>
+    <main class="concept" id="house2d-app">
+      <header class="concept__header">
+        <a href="/" class="concept__name" aria-label="Open the original 3D portfolio">
+          <strong>Filippa Karlsson</strong>
+          <span>Digital designer</span>
+        </a>
+        <div class="concept__actions">
+          <span>2.5D concept</span>
+          <a href="/">3D version</a>
+        </div>
+      </header>
+
+      <section class="concept__stage" aria-label="Interactive illustrated portfolio house">
+        <div class="room-status" aria-live="polite">
+          <span class="room-status__number" data-room-number>—</span>
+          <div>
+            <p data-room-label>Explore the house</p>
+            <span data-room-description>Move over a floor</span>
+          </div>
+        </div>
+
+        <figure class="house-shell" data-house-shell>
+          <img
+            class="house-image"
+            src="/portfolio-house-2d.png"
+            alt="A refined six-floor architectural cutaway containing creative studios, living spaces and portfolio rooms"
+          />
+          <div class="floor-map" data-floor-map aria-label="Portfolio floors"></div>
+          <figcaption class="house-hint">Hover to illuminate · Click to explore</figcaption>
+        </figure>
+      </section>
+
+      <aside class="room-sheet" data-room-sheet aria-hidden="true" inert>
+        <button class="room-sheet__backdrop" type="button" data-close-room aria-label="Close room"></button>
+        <section class="room-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="selected-room-title">
+          <button class="room-sheet__close" type="button" data-close-room>Close <span aria-hidden="true">×</span></button>
+          <p class="room-sheet__eyebrow" data-sheet-eyebrow></p>
+          <h1 id="selected-room-title" data-sheet-title></h1>
+          <p class="room-sheet__description" data-sheet-description></p>
+          <div class="room-sheet__projects" data-sheet-projects></div>
+        </section>
+      </aside>
+    </main>
+    <script type="module" src="/src/two-d.ts"></script>
+  </body>
+</html>
