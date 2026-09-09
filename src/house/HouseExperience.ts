@@ -5,8 +5,10 @@ import {
   DirectionalLight,
   HemisphereLight,
   Mesh,
+  MeshStandardMaterial,
   Object3D,
   OrthographicCamera,
+  PCFSoftShadowMap,
   SRGBColorSpace,
   Scene,
   Vector3,
@@ -58,7 +60,9 @@ export class HouseExperience {
     this.renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 0.98;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setClearColor(0x000000, 0);
     this.scene.background = null;
   }
@@ -75,7 +79,7 @@ export class HouseExperience {
       if (object instanceof Mesh) this.modelMeshCount += 1;
     });
     this.prepareMaterials(model);
-    this.addGlobalLighting();
+    this.addGlobalLighting(model);
     this.camera = this.resolveCamera(model);
     this.lights = new RoomLightController(model);
     this.interaction = new RoomInteractionController(this.canvas, this.camera, model, {
@@ -288,19 +292,65 @@ export class HouseExperience {
   }
 
   private prepareMaterials(model: Object3D): void {
+    const preparedMaterials = new Set<MeshStandardMaterial>();
+
     model.traverse((object) => {
       if (!(object instanceof Mesh)) return;
-      object.castShadow = false;
-      object.receiveShadow = false;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      object.castShadow = materials.every((material) => !material.transparent || material.opacity >= 0.85);
+      object.receiveShadow = true;
+
+      for (const material of materials) {
+        if (!(material instanceof MeshStandardMaterial) || preparedMaterials.has(material)) continue;
+        preparedMaterials.add(material);
+
+        const color = material.color;
+        const hsl = { h: 0, s: 0, l: 0 };
+        color.getHSL(hsl);
+
+        // Keep the established pastel palette while giving it enough separation
+        // to survive the bright website background and display tone mapping.
+        const saturation = hsl.s > 0.025 ? Math.min(1, hsl.s * 1.16 + 0.018) : hsl.s;
+        const lightness = hsl.l > 0.86
+          ? Math.max(0, hsl.l - 0.035)
+          : Math.max(0, hsl.l * 0.93);
+        color.setHSL(hsl.h, saturation, lightness);
+        material.roughness = Math.min(0.9, Math.max(0.34, material.roughness * 0.86));
+        material.needsUpdate = true;
+      }
     });
   }
 
-  private addGlobalLighting(): void {
-    this.scene.add(new AmbientLight('#fff8ef', 0.72));
-    this.scene.add(new HemisphereLight('#fffaf2', '#c9ced1', 1.15));
-    const key = new DirectionalLight('#ffe4c8', 2.3);
-    key.position.set(-5, -8, 12);
+  private addGlobalLighting(model: Object3D): void {
+    const bounds = new Box3().setFromObject(model);
+    const center = bounds.getCenter(new Vector3());
+    const size = bounds.getSize(new Vector3());
+    const shadowExtent = Math.max(size.x, size.z) * 0.62;
+
+    this.scene.add(new AmbientLight('#fff6e9', 0.3));
+    this.scene.add(new HemisphereLight('#fff5e8', '#77818a', 0.72));
+
+    const key = new DirectionalLight('#ffd8b5', 3.25);
+    key.position.copy(center).add(new Vector3(-size.x * 0.75, -size.y * 0.9, size.z * 0.72));
+    key.target.position.copy(center);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.bias = -0.00035;
+    key.shadow.normalBias = 0.025;
+    key.shadow.camera.left = -shadowExtent;
+    key.shadow.camera.right = shadowExtent;
+    key.shadow.camera.top = shadowExtent;
+    key.shadow.camera.bottom = -shadowExtent;
+    key.shadow.camera.near = 0.1;
+    key.shadow.camera.far = Math.max(size.x, size.y, size.z) * 4;
+    this.scene.add(key.target);
     this.scene.add(key);
+
+    const rim = new DirectionalLight('#bfd4e6', 0.58);
+    rim.position.copy(center).add(new Vector3(size.x * 0.7, size.y * 0.35, size.z * 0.4));
+    rim.target.position.copy(center);
+    this.scene.add(rim.target);
+    this.scene.add(rim);
   }
 
   private emptyIntensities(): Record<RoomId, number> {
