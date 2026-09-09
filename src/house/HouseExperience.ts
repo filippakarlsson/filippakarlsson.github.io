@@ -293,10 +293,35 @@ export class HouseExperience {
 
   private prepareMaterials(model: Object3D): void {
     const preparedMaterials = new Set<MeshStandardMaterial>();
+    const grassColors = ['#70806b', '#879477', '#a2a57f'];
 
     model.traverse((object) => {
       if (!(object instanceof Mesh)) return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
+
+      // The Blender ground exports as a bright rectangular white slab. The
+      // website already supplies the soft landscape beneath the house, so the
+      // slab should not be visible here.
+      if (object.name === 'GROUND') {
+        object.visible = false;
+        return;
+      }
+
+      // Keep the authored grass, but prevent it from becoming almost black
+      // under the stronger contrast lighting used for the house interiors.
+      if (object.name === 'LANDSCAPE_GRASS_BLADES') {
+        object.castShadow = false;
+        object.receiveShadow = false;
+        materials.forEach((material, index) => {
+          if (!(material instanceof MeshStandardMaterial)) return;
+          material.color.set(grassColors[index] ?? grassColors[1]);
+          material.roughness = 0.88;
+          material.needsUpdate = true;
+          preparedMaterials.add(material);
+        });
+        return;
+      }
+
       object.castShadow = materials.every((material) => !material.transparent || material.opacity >= 0.85);
       object.receiveShadow = true;
 
