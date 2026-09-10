@@ -134,7 +134,7 @@ const showHover = (roomId: RoomId | null): void => {
 
   if (!roomId) {
     statusEyebrow.textContent = 'Explore the house';
-    statusRoom.textContent = 'Move across a room';
+    statusRoom.textContent = 'Move across a room · or use ↑ ↓ keys';
     return;
   }
 

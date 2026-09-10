@@ -7,7 +7,7 @@ import {
   Vector2,
   Vector3,
 } from 'three';
-import { isRoomId, type RoomId } from '../rooms';
+import { isRoomId, ROOM_IDS, type RoomId } from '../rooms';
 import type { RoomViewBounds } from './CameraTransitionController';
 
 interface RoomInteractionCallbacks {
@@ -42,6 +42,9 @@ export class RoomInteractionController {
     this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: true });
     this.canvas.addEventListener('pointerleave', this.onPointerLeave, { passive: true });
     this.canvas.addEventListener('click', this.onClick);
+    this.canvas.addEventListener('focus', this.onFocus);
+    this.canvas.addEventListener('blur', this.onBlur);
+    this.canvas.addEventListener('keydown', this.onKeyDown);
   }
 
   getHoveredRoom(): RoomId | null {
@@ -119,6 +122,55 @@ export class RoomInteractionController {
     if (!this.enabled) return;
     const roomId = this.pickRoom(event.clientX, event.clientY);
     if (roomId) this.callbacks.onSelect(roomId);
+  };
+
+  private readonly onFocus = (): void => {
+    if (this.enabled && this.hoveredRoom === null) this.setHoveredRoom('welcome');
+  };
+
+  private readonly onBlur = (): void => {
+    if (this.enabled) this.setHoveredRoom(null);
+  };
+
+  private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (!this.enabled) return;
+
+    if ((event.key === 'Enter' || event.key === ' ') && this.hoveredRoom) {
+      event.preventDefault();
+      this.callbacks.onSelect(this.hoveredRoom);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.setHoveredRoom(null);
+      return;
+    }
+
+    const currentIndex = this.hoveredRoom ? ROOM_IDS.indexOf(this.hoveredRoom) : -1;
+    let nextIndex: number | null = null;
+
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'ArrowRight':
+        nextIndex = currentIndex < 0 ? 0 : Math.min(ROOM_IDS.length - 1, currentIndex + 1);
+        break;
+      case 'ArrowDown':
+      case 'ArrowLeft':
+        nextIndex = currentIndex < 0 ? ROOM_IDS.length - 1 : Math.max(0, currentIndex - 1);
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = ROOM_IDS.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    this.setHoveredRoom(ROOM_IDS[nextIndex]);
   };
 
   private pickRoom(clientX: number, clientY: number): RoomId | null {

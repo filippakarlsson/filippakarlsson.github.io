@@ -60,7 +60,7 @@ export class HouseExperience {
     this.renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.98;
+    this.renderer.toneMappingExposure = 1.03;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setClearColor(0x000000, 0);
@@ -81,6 +81,7 @@ export class HouseExperience {
     this.prepareMaterials(model);
     this.addGlobalLighting(model);
     this.camera = this.resolveCamera(model);
+    this.camera.layers.enableAll();
     this.lights = new RoomLightController(model);
     this.interaction = new RoomInteractionController(this.canvas, this.camera, model, {
       onHover: (roomId) => {

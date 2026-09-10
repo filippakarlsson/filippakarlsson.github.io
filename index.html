@@ -53,7 +53,13 @@
       </button>
 
       <section class="house-stage" aria-label="Interactive portfolio house">
-        <canvas id="house-canvas" aria-label="Move over a room to illuminate it, then click to select it."></canvas>
+        <canvas
+          id="house-canvas"
+          tabindex="0"
+          role="group"
+          aria-label="Interactive portfolio house. Use the arrow keys to illuminate rooms, then press Enter or Space to select one."
+          aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home End Enter Space Escape"
+        ></canvas>
 
         <div class="loading-state" id="loading-state" role="status">
           <span class="loading-state__line"></span>
@@ -68,7 +74,7 @@
 
       <div class="interaction-status" aria-live="polite">
         <span class="interaction-status__eyebrow" id="status-eyebrow">Explore the house</span>
-        <span class="interaction-status__room" id="status-room">Move across a room</span>
+        <span class="interaction-status__room" id="status-room">Move across a room · or use ↑ ↓ keys</span>
       </div>
 
       <div class="info-overlay" id="info-overlay" aria-hidden="true">
@@ -101,7 +107,7 @@
                 <h1>The house is the portfolio.</h1>
                 <div class="info-content__copy">
                   <p>This site is built around an interactive 3D house instead of a conventional portfolio layout. Each floor represents a different category of work.</p>
-                  <p>Move across a room to switch on its lights, then select it to explore what lives inside. The architecture is both the interface and the navigation.</p>
+                  <p>Move across a room to switch on its lights, then select it to explore what lives inside. You can also use the arrow keys and press Enter. The architecture is both the interface and the navigation.</p>
                 </div>
               </article>
 

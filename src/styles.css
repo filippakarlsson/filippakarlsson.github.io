@@ -387,6 +387,15 @@ button {
   outline: none;
 }
 
+#house-canvas:focus-visible {
+  outline: 2px solid rgba(71, 75, 69, 0.58);
+  outline-offset: -0.75rem;
+}
+
+:root[data-theme="night"] #house-canvas:focus-visible {
+  outline-color: rgba(245, 239, 225, 0.72);
+}
+
 :root[data-theme="night"] #house-canvas {
   filter: contrast(1.08) saturate(0.88) brightness(0.96);
 }
