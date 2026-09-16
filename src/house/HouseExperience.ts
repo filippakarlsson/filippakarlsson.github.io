@@ -156,6 +156,7 @@ export class HouseExperience {
 
   prepareRoomReturn(roomId: RoomId): void {
     this.selectedRoom = roomId;
+    this.resize();
     this.interaction?.setEnabled(false);
     if (this.lights?.setActiveRoom(roomId)) this.resumeRendering();
     this.cameraTransitions?.restoreFocusedRoom(roomId);
@@ -167,6 +168,7 @@ export class HouseExperience {
     if (!this.cameraTransitions) return;
     await this.cameraTransitions.returnToOverview();
     this.selectedRoom = null;
+    this.resize();
     if (this.lights?.setActiveRoom(null)) this.resumeRendering();
     this.interaction?.setEnabled(true);
     this.onHover(null);
@@ -199,6 +201,9 @@ export class HouseExperience {
 
   private readonly resize = (): void => {
     if (!this.camera) return;
+    // Hidden project views have no layout size. Keep the drawing buffer intact
+    // until the stage is visible again, then measure it in prepareRoomReturn.
+    if (this.canvas.clientWidth === 0 || this.canvas.clientHeight === 0) return;
     const width = Math.max(1, this.canvas.clientWidth);
     const height = Math.max(1, this.canvas.clientHeight);
     const aspect = width / height;
