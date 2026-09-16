@@ -31,12 +31,23 @@ const ROOM_LIGHT_LAYERS: Record<RoomId, number> = {
 
 export class RoomLightController {
   private readonly runtimeLights: RuntimeLight[] = [];
+  private readonly pooledLights: PointLight[] = [];
   private readonly emissiveBindings: EmissiveBinding[] = [];
   private activeRoom: RoomId | null = null;
 
   constructor(private readonly model: Object3D) {
     this.assignRoomLayers();
     this.buildRuntimeLights();
+    const lightsPerRoom = Math.max(1, ...ROOM_IDS.map((roomId) =>
+      this.runtimeLights.filter((binding) => binding.roomId === roomId).length));
+    // A fixed number of GPU lights avoids recompiling every material whenever
+    // a light becomes visible. Two room banks preserve the hover crossfade.
+    for (let index = 0; index < lightsPerRoom * 2; index += 1) {
+      const light = new PointLight('#ffffff', 0, 4.6, 2);
+      light.name = `ROOM_LIGHT_POOL_${index}`;
+      this.model.parent?.add(light);
+      this.pooledLights.push(light);
+    }
   }
 
   setActiveRoom(roomId: RoomId | null): boolean {
@@ -51,16 +62,12 @@ export class RoomLightController {
     for (const binding of this.runtimeLights) {
       const isActive = binding.roomId === this.activeRoom;
       const target = isActive ? binding.targetIntensity : 0;
-      if (isActive) binding.light.visible = true;
       const next = MathUtils.damp(binding.light.intensity, target, 10, deltaSeconds);
       if (Math.abs(next - target) > 0.02) {
         binding.light.intensity = next;
         isAnimating = true;
       } else {
         binding.light.intensity = target;
-      }
-      if (!isActive && binding.light.intensity === 0) {
-        binding.light.visible = false;
       }
     }
 
@@ -80,6 +87,7 @@ export class RoomLightController {
       }
     }
 
+    this.syncPooledLights();
     return isAnimating;
   }
 
@@ -111,7 +119,6 @@ export class RoomLightController {
       light.visible = false;
       light.layers.set(ROOM_LIGHT_LAYERS[roomId]);
       light.position.copy(anchor.getWorldPosition(light.position));
-      this.model.parent?.add(light);
       this.runtimeLights.push({ light, roomId, targetIntensity });
 
       this.bindEmissiveObject(
@@ -127,6 +134,27 @@ export class RoomLightController {
         lightColor,
       );
     }
+  }
+
+  private syncPooledLights(): void {
+    const rooms = ROOM_IDS.map((roomId) => ({
+      roomId,
+      intensity: this.runtimeLights.filter((binding) => binding.roomId === roomId)
+        .reduce((sum, binding) => sum + binding.light.intensity, 0),
+    })).filter((room) => room.intensity > 0)
+      .sort((a, b) => b.intensity - a.intensity).slice(0, 2);
+    const bindings = rooms.flatMap((room) =>
+      this.runtimeLights.filter((binding) => binding.roomId === room.roomId));
+
+    this.pooledLights.forEach((light, index) => {
+      const source = bindings[index]?.light;
+      light.intensity = source?.intensity ?? 0;
+      if (!source) return;
+      light.position.copy(source.position);
+      light.color.copy(source.color);
+      light.distance = source.distance;
+      light.decay = source.decay;
+    });
   }
 
   private bindEmissiveObject(

@@ -51,6 +51,7 @@ export class HouseExperience {
   private modelMeshCount = 0;
   private renderedFrameCount = 0;
   private overviewFrustumCenterX = 0;
+  private initializing = true;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -63,12 +64,21 @@ export class HouseExperience {
     this.renderer.toneMappingExposure = 1.03;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
+    // Geometry and the shadow-casting key light are static. Room lights do not
+    // cast shadows, so the same full-quality map can be reused during hover.
+    this.renderer.shadowMap.autoUpdate = false;
     this.renderer.setClearColor(0x000000, 0);
     this.scene.background = null;
   }
 
   async load(url: string): Promise<void> {
+    performance.mark('house-load-start');
     const loader = new GLTFLoader();
+    try {
+      MeshoptDecoder.useWorkers(2);
+    } catch {
+      // Keep the decoder's main-thread fallback for restricted environments.
+    }
     loader.setMeshoptDecoder(MeshoptDecoder);
     const gltf = await loader.loadAsync(url);
     const model = gltf.scene;
@@ -104,12 +114,20 @@ export class HouseExperience {
     }
 
     this.resize();
+    performance.mark('house-model-ready');
+    // Avoid synchronously waiting for linked GPU programs in the first render.
+    await this.renderer.compileAsync(this.scene, this.camera);
+    this.initializing = false;
+    this.renderer.shadowMap.needsUpdate = true;
     window.addEventListener('resize', this.resize);
     document.addEventListener('visibilitychange', this.onVisibilityChange);
     this.canvas.dataset.ready = 'true';
     this.canvas.dataset.hitboxCount = String(this.interaction.getHitboxCount());
     this.updateRoomPositions();
     this.renderOnce();
+    performance.mark('house-first-frame');
+    const loadMeasure = performance.measure('house-load', 'house-load-start', 'house-first-frame');
+    this.canvas.dataset.loadMs = loadMeasure.duration.toFixed(0);
   }
 
   async focusRoom(roomId: RoomId): Promise<void> {
@@ -209,7 +227,7 @@ export class HouseExperience {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(width, height, false);
     this.updateRoomPositions();
-    this.renderOnce();
+    if (!this.initializing) this.renderOnce();
   };
 
   private readonly onVisibilityChange = (): void => {
@@ -267,6 +285,7 @@ export class HouseExperience {
     this.canvas.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.canvas.dataset.triangles = String(this.renderer.info.render.triangles);
     this.canvas.dataset.renderedFrames = String(this.renderedFrameCount);
+    this.canvas.dataset.programCount = String(this.renderer.info.programs?.length ?? 0);
   }
 
   private updateRoomPositions(): void {

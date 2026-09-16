@@ -1,5 +1,5 @@
 import './styles.css';
-import { HouseExperience, roomSummary } from './house/HouseExperience';
+import type { HouseExperience } from './house/HouseExperience';
 import { ROOM_IDS, ROOMS, type RoomId } from './rooms';
 import { PageTransitionController, type TransitionPhase } from './PageTransitionController';
 import { RoomView } from './RoomView';
@@ -145,35 +145,38 @@ const showHover = (roomId: RoomId | null): void => {
 const showSelection = (roomId: RoomId): void => {
   alignStatusToRoom(roomId);
   statusEyebrow.textContent = 'Entering';
-  statusRoom.textContent = roomSummary(roomId);
+  statusRoom.textContent = `${ROOMS[roomId].label} — ${ROOMS[roomId].description}`;
   window.dispatchEvent(new CustomEvent('portfolio-room-select', { detail: ROOMS[roomId] }));
   void pageTransition.enterRoom(roomId).catch((error: unknown) => {
     console.error('Room transition failed:', error);
   });
 };
 
-experience = new HouseExperience(canvas, showHover, showSelection);
-const roomView = new RoomView(roomViewElement, () => {
-  void pageTransition.returnToHouse().catch((error: unknown) => {
-    console.error('Return transition failed:', error);
+const startHouse = async (): Promise<void> => {
+  // Let the lightweight page and its menu paint before initializing WebGL.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => window.setTimeout(resolve, 0)));
+  const { HouseExperience } = await import('./house/HouseExperience');
+  experience = new HouseExperience(canvas, showHover, showSelection);
+  const roomView = new RoomView(roomViewElement, () => {
+    void pageTransition.returnToHouse().catch((error: unknown) => {
+      console.error('Return transition failed:', error);
+    });
   });
-});
-pageTransition = new PageTransitionController(experience, roomView, transitionOverlay, houseStage);
-window.__HOUSE_DEBUG__ = {
-  getState: () => experience.getState(),
-  getRoomScreenPosition: (roomId) => experience.getRoomScreenPosition(roomId),
-  rooms: ROOM_IDS,
-  getTransitionPhase: () => pageTransition.getPhase(),
+  pageTransition = new PageTransitionController(experience, roomView, transitionOverlay, houseStage);
+  window.__HOUSE_DEBUG__ = {
+    getState: () => experience.getState(),
+    getRoomScreenPosition: (roomId) => experience.getRoomScreenPosition(roomId),
+    rooms: ROOM_IDS,
+    getTransitionPhase: () => pageTransition.getPhase(),
+  };
+
+  await experience.load('/models/house.glb');
+  loadingState.hidden = true;
 };
 
-experience
-  .load('/models/house.glb')
-  .then(() => {
-    loadingState.hidden = true;
-  })
-  .catch((error: unknown) => {
-    loadingState.hidden = true;
-    errorState.hidden = false;
-    errorDetail.textContent = error instanceof Error ? error.message : String(error);
-    console.error('Portfolio house failed to load:', error);
-  });
+void startHouse().catch((error: unknown) => {
+  loadingState.hidden = true;
+  errorState.hidden = false;
+  errorDetail.textContent = error instanceof Error ? error.message : String(error);
+  console.error('Portfolio house failed to load:', error);
+});
